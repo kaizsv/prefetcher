@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
         int *out0 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
         int *out1 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
         int *out2 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
+        int *out3 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
 
         srand(time(NULL));
         for (int y = 0; y < TEST_H; y++)
@@ -89,10 +90,18 @@ int main(int argc, char *argv[])
         printf("naive: \t\t %ld us\n", diff_in_us(start, end));
 #endif
 
+#if defined(AVX_TRANSPOSE)
+        clock_gettime(CLOCK_REALTIME, &start);
+        avx_transpose(src, out3, TEST_W, TEST_H);
+        clock_gettime(CLOCK_REALTIME, &end);
+        printf("avx_transpose: \t\t %ld us\n", diff_in_us(start, end));
+#endif
+
         free(src);
         free(out0);
         free(out1);
         free(out2);
+        free(out3);
     }
 
     return 0;
