@@ -123,7 +123,7 @@ void avx_prefetch_transpose(int *src, int *dst, int w, int h)
 {
     for (int x = 0; x < w; x += 8) {
         for (int y = 0; y < h; y += 8) {
-#define AVX_PFDIST 8
+#define AVX_PFDIST 16
             _mm_prefetch(src+(y + AVX_PFDIST + 0) *w + x, _MM_HINT_T1);
             _mm_prefetch(src+(y + AVX_PFDIST + 1) *w + x, _MM_HINT_T1);
             _mm_prefetch(src+(y + AVX_PFDIST + 2) *w + x, _MM_HINT_T1);
