@@ -10,6 +10,8 @@
 #define TEST_W 4096
 #define TEST_H 4096
 
+#define USAGE "usage: ./exec [square size] [prefetch distance]"
+
 /* provide the implementations of naive_transpose,
  * sse_transpose, sse_prefetch_transpose
  */
@@ -31,6 +33,15 @@ static long diff_in_us(struct timespec t1, struct timespec t2)
 
 int main(int argc, char *argv[])
 {
+
+    if (argc < 3) {
+        printf(USAGE);
+        return -1;
+    }
+
+    int square_size = atoi(argv[1]);
+    int prefetch_distance = atoi(argv[2]);
+
 #ifndef PERF
     /* verify the result of 4x4 matrix */
     {
@@ -43,16 +54,14 @@ int main(int argc, char *argv[])
                              2, 6, 10, 14, 3, 7, 11, 15
                            };
 
-        for (int y = 0; y < 4; y++)
-        {
+        for (int y = 0; y < 4; y++) {
             for (int x = 0; x < 4; x++)
                 printf(" %2d", testin[y * 4 + x]);
             printf("\n");
         }
         printf("\n");
         sse_transpose(testin, testout, 4, 4);
-        for (int y = 0; y < 4; y++)
-        {
+        for (int y = 0; y < 4; y++) {
             for (int x = 0; x < 4; x++)
                 printf(" %2d", testout[y * 4 + x]);
             printf("\n");
@@ -64,48 +73,55 @@ int main(int argc, char *argv[])
 
     {
         struct timespec start, end;
+        FILE *output;
         int *src  = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
         int *out = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
 
         srand(time(NULL));
-        for (int y = 0; y < TEST_H; y++)
-            for (int x = 0; x < TEST_W; x++)
-                *(src + y * TEST_W + x) = rand();
+        for (int y = 0; y < square_size; y++)
+            for (int x = 0; x < square_size; x++)
+                *(src + y * square_size + x) = rand();
 #if defined(SSE_PREFETCH_TRANSPOSE)
+        output = fopen("sse_prefetch.txt", "a");
         clock_gettime(CLOCK_REALTIME, &start);
-        sse_prefetch_transpose(src, out, TEST_W, TEST_H);
+        sse_prefetch_transpose(src, out, square_size, square_size, prefetch_distance);
         clock_gettime(CLOCK_REALTIME, &end);
-        printf("sse prefetch: \t %ld us\n", diff_in_us(start, end));
+        fprintf(output, "%d %ld\n", prefetch_distance, diff_in_us(start, end));
 #endif
 
 #if defined(SSE_TRANSPOSE)
+        output = fopen("sse.txt", "a");
         clock_gettime(CLOCK_REALTIME, &start);
-        sse_transpose(src, out, TEST_W, TEST_H);
+        sse_transpose(src, out, square_size, square_size);
         clock_gettime(CLOCK_REALTIME, &end);
-        printf("sse: \t\t %ld us\n", diff_in_us(start, end));
+        fprintf(output, "%ld\n", diff_in_us(start, end));
 #endif
 
 #if defined(NAIVE_TRANSPOSE)
+        output = fopen("naive.txt", "a");
         clock_gettime(CLOCK_REALTIME, &start);
-        naive_transpose(src, out, TEST_W, TEST_H);
+        naive_transpose(src, out, square_size, square_size);
         clock_gettime(CLOCK_REALTIME, &end);
-        printf("naive: \t\t %ld us\n", diff_in_us(start, end));
+        fprintf(output, "%ld\n", diff_in_us(start, end));
 #endif
 
 #if defined(AVX_TRANSPOSE)
+        output = fopen("avx.txt", "a");
         clock_gettime(CLOCK_REALTIME, &start);
-        avx_transpose(src, out, TEST_W, TEST_H);
+        avx_transpose(src, out, square_size, square_size);
         clock_gettime(CLOCK_REALTIME, &end);
-        printf("avx_transpose: \t\t %ld us\n", diff_in_us(start, end));
+        fprintf(output, "%ld\n", diff_in_us(start, end));
 #endif
 
 #if defined(AVX_PREFETCH_TRANSPOSE)
+        output = fopen("avx_prefetch.txt", "a");
         clock_gettime(CLOCK_REALTIME, &start);
-        avx_prefetch_transpose(src, out, TEST_W, TEST_H);
+        avx_prefetch_transpose(src, out, square_size, square_size, prefetch_distance);
         clock_gettime(CLOCK_REALTIME, &end);
-        printf("avx_transpose: \t\t %ld us\n", diff_in_us(start, end));
+        fprintf(output, "%d %ld\n", prefetch_distance, diff_in_us(start, end));
 #endif
 
+        fclose(output);
         free(src);
         free(out);
     }

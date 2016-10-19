@@ -34,15 +34,14 @@ void sse_transpose(int *src, int *dst, int w, int h)
     }
 }
 
-void sse_prefetch_transpose(int *src, int *dst, int w, int h)
+void sse_prefetch_transpose(int *src, int *dst, int w, int h, int d)
 {
     for (int x = 0; x < w; x += 4) {
         for (int y = 0; y < h; y += 4) {
-#define PFDIST  8
-            _mm_prefetch(src+(y + PFDIST + 0) *w + x, _MM_HINT_T1);
-            _mm_prefetch(src+(y + PFDIST + 1) *w + x, _MM_HINT_T1);
-            _mm_prefetch(src+(y + PFDIST + 2) *w + x, _MM_HINT_T1);
-            _mm_prefetch(src+(y + PFDIST + 3) *w + x, _MM_HINT_T1);
+            _mm_prefetch(src+(y + d + 0) *w + x, _MM_HINT_T1);
+            _mm_prefetch(src+(y + d + 1) *w + x, _MM_HINT_T1);
+            _mm_prefetch(src+(y + d + 2) *w + x, _MM_HINT_T1);
+            _mm_prefetch(src+(y + d + 3) *w + x, _MM_HINT_T1);
 
             __m128i I0 = _mm_loadu_si128 ((__m128i *)(src + (y + 0) * w + x));
             __m128i I1 = _mm_loadu_si128 ((__m128i *)(src + (y + 1) * w + x));
@@ -119,19 +118,18 @@ void avx_transpose(int *src, int *dst, int w, int h)
 #endif
 
 #if defined(AVX_PREFETCH_TRANSPOSE)
-void avx_prefetch_transpose(int *src, int *dst, int w, int h)
+void avx_prefetch_transpose(int *src, int *dst, int w, int h, int d)
 {
     for (int x = 0; x < w; x += 8) {
         for (int y = 0; y < h; y += 8) {
-#define AVX_PFDIST 16
-            _mm_prefetch(src+(y + AVX_PFDIST + 0) *w + x, _MM_HINT_T1);
-            _mm_prefetch(src+(y + AVX_PFDIST + 1) *w + x, _MM_HINT_T1);
-            _mm_prefetch(src+(y + AVX_PFDIST + 2) *w + x, _MM_HINT_T1);
-            _mm_prefetch(src+(y + AVX_PFDIST + 3) *w + x, _MM_HINT_T1);
-            _mm_prefetch(src+(y + AVX_PFDIST + 4) *w + x, _MM_HINT_T1);
-            _mm_prefetch(src+(y + AVX_PFDIST + 5) *w + x, _MM_HINT_T1);
-            _mm_prefetch(src+(y + AVX_PFDIST + 6) *w + x, _MM_HINT_T1);
-            _mm_prefetch(src+(y + AVX_PFDIST + 7) *w + x, _MM_HINT_T1);
+            _mm_prefetch(src+(y + d + 0) *w + x, _MM_HINT_T1);
+            _mm_prefetch(src+(y + d + 1) *w + x, _MM_HINT_T1);
+            _mm_prefetch(src+(y + d + 2) *w + x, _MM_HINT_T1);
+            _mm_prefetch(src+(y + d + 3) *w + x, _MM_HINT_T1);
+            _mm_prefetch(src+(y + d + 4) *w + x, _MM_HINT_T1);
+            _mm_prefetch(src+(y + d + 5) *w + x, _MM_HINT_T1);
+            _mm_prefetch(src+(y + d + 6) *w + x, _MM_HINT_T1);
+            _mm_prefetch(src+(y + d + 7) *w + x, _MM_HINT_T1);
 
             __m256i ymm0 = _mm256_loadu_si256((__m256i *) (src + (y + 0) * w + x));
             __m256i ymm1 = _mm256_loadu_si256((__m256i *) (src + (y + 1) * w + x));
