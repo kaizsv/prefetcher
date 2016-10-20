@@ -19,17 +19,24 @@ all: $(GIT_HOOKS) main.c
 	$(CC) $(CFLAGS) $(AVX) $(PERF) -DAVX_PREFETCH_TRANSPOSE main.c -o avx_prefetch_transpose
 	$(CC) $(CFLAGS) calculate.c -o calculate
 
-		#perf stat --repeat 10 -e cache-misses ./naive_transpose 4096 $$i;
-		#perf stat --repeat 10 -e cache-misses ./sse_transpose 4096 $$i;
-		#perf stat --repeat 10 -e cache-misses ./avx_transpose 4096 $$i;
 diff-distance-perf: all
 	for i in `seq 0 1 17` ; do \
 		perf stat --repeat 10 -e cache-misses,L1-dcache-load-misses,L1-icache-load-misses ./sse_prefetch_transpose 4096 $$i; \
 		perf stat --repeat 10 -e cache-misses,L1-dcache-load-misses,L1-icache-load-misses ./avx_prefetch_transpose 4096 $$i; \
 	done;
-	./calculate
-	gnuplot ./scripts/diff_distance.gp
+	./calculate 0
+	gnuplot -e "file='diff_distance_out.txt'" ./scripts/runtime.gp
 
+diff-block-size: all
+	for i in 1024 2048 4096 8192 ; do \
+		perf stat --repeat 10 -e cache-misses,L1-dcache-load-misses,L1-icache-load-misses ./naive_transpose $$i 8; \
+		perf stat --repeat 10 -e cache-misses,L1-dcache-load-misses,L1-icache-load-misses ./sse_transpose $$i 8; \
+		perf stat --repeat 10 -e cache-misses,L1-dcache-load-misses,L1-icache-load-misses ./sse_prefetch_transpose $$i 8; \
+		perf stat --repeat 10 -e cache-misses,L1-dcache-load-misses,L1-icache-load-misses ./avx_transpose $$i 8; \
+		perf stat --repeat 10 -e cache-misses,L1-dcache-load-misses,L1-icache-load-misses ./avx_prefetch_transpose $$i 8; \
+	done;
+	./calculate 1
+	gnuplot -e "file='output.txt'" ./scripts/runtime.gp
 
 
 $(GIT_HOOKS):

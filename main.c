@@ -74,8 +74,8 @@ int main(int argc, char *argv[])
     {
         struct timespec start, end;
         FILE *output;
-        int *src  = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
-        int *out = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
+        int *src  = (int *) malloc(sizeof(int) * square_size * square_size);
+        int *out = (int *) malloc(sizeof(int) * square_size * square_size);
 
         srand(time(NULL));
         for (int y = 0; y < square_size; y++)
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
         clock_gettime(CLOCK_REALTIME, &start);
         avx_prefetch_transpose(src, out, square_size, square_size, prefetch_distance);
         clock_gettime(CLOCK_REALTIME, &end);
-        fprintf(output, "%d %ld\n", prefetch_distance, diff_in_us(start, end));
+        fprintf(output, "%d %ld\n", square_size, diff_in_us(start, end));
 #endif
 
         fclose(output);
